@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree → ZIP Download</title>
+    <style>
+        :root {
+            --bg: #1e1e1e;
+            --surface: #2a2a2a;
+            --text: #f0f0f0;
+            --accent: #f5b800;
+            --accent-hover: #e5a800;
+            --border: #4a4a4a;
+            --input-bg: #141414;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .container {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 950px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #ffd54f, #ffb300);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+        .subtitle { color: #bbb; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #ccc; }
+        textarea {
+            width: 100%;
+            height: 400px;
+            background: var(--input-bg);
+            color: #ffe0b0;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245,184,0,0.25);
+        }
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .filename-box {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.4rem 0.8rem;
+        }
+        .filename-box span { color: #bbb; }
+        .filename-box input {
+            background: transparent;
+            border: none;
+            color: #f0f0f0;
+            font-size: 0.9rem;
+            width: 120px;
+            outline: none;
+        }
+        .btn {
+            background: var(--accent);
+            color: #1e1e1e;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .btn-secondary {
+            background: #444;
+            color: #ddd;
+        }
+        .btn-secondary:hover { background: #555; }
+        .status {
+            margin-left: 0.5rem;
+            font-size: 0.9rem;
+            color: #ffd54f;
+            min-height: 1.2em;
+        }
+        .status.error { color: #ff6b6b; }
+        .tips {
+            background: #232323;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #bbb;
+        }
+        .tips code {
+            background: #363636;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            color: #ffb300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Tree → ZIP</h1>
+        <p class="subtitle">Paste a directory tree – press <strong>Download ZIP</strong> to get the exact folder structure.</p>
+
+        <label for="treeInput">Directory Tree:</label>
+        <textarea id="treeInput" spellcheck="false">TMDCLauncher/
+├── build.gradle.kts (project-level)
+├── settings.gradle.kts
+├── gradle.properties
+├── gradle/
+│   └── wrapper/
+│       ├── gradle-wrapper.jar
+│       └── gradle-wrapper.properties
+├── gradlew
+├── gradlew.bat
+└── app/
+    ├── build.gradle.kts
+    └── src/
+        └── main/
+            ├── AndroidManifest.xml
+            ├── java/com/tmdc/tmdclauncher/
+            │   ├── MainActivity.kt
+            │   ├── ScreenStayService.kt
+            │   └── SettingsActivity.kt
+            └── res/
+                ├── values/
+                │   ├── strings.xml
+                │   └── themes.xml
+                ├── xml/
+                │   └── settings_preferences.xml
+                └── drawable/ (icons, etc.)</textarea>
+
+        <div class="controls">
+            <div class="filename-box">
+                <span>📄</span>
+                <input type="text" id="zipNameInput" value="TMDCLauncher" placeholder="archive-name">
+                <span>.zip</span>
+            </div>
+            <button class="btn" id="downloadBtn">
+                <span>⬇️</span> Download ZIP
+            </button>
+            <button class="btn btn-secondary" id="clearBtn">
+                <span>🗑️</span> Clear
+            </button>
+            <span class="status" id="statusMsg"></span>
+        </div>
+
+        <div class="tips">
+            <strong>💡 How it works:</strong>
+            <ul style="margin-top: 0.4rem; padding-left: 1.2rem;">
+                <li>Lines ending with <code>/</code> become <strong>folders</strong>.</li>
+                <li>Other lines become <strong>empty files</strong> (you add content later).</li>
+                <li>Indentation is read from the visual position – tree characters (<code>├──</code>, <code>│</code>) are handled automatically.</li>
+                <li>Comments like <code>(project-level)</code> are removed.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        (() => {
+            const textarea = document.getElementById('treeInput');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const zipNameInput = document.getElementById('zipNameInput');
+            const statusEl = document.getElementById('statusMsg');
+
+            function cleanLine(line) {
+                let cleaned = line.replace(/^[│├└─\s]+/, '');
+                cleaned = cleaned.replace(/\s*\(.*?\)\s*$/, '');
+                return cleaned.trimEnd();
+            }
+
+            function parseTree(text) {
+                const lines = text.split('\n');
+                const entries = [];
+                const stack = [{ depth: -1, path: '' }];
+
+                for (const raw of lines) {
+                    if (raw.trim() === '') continue;
+                    const cleaned = cleanLine(raw);
+                    if (!cleaned) continue;
+                    const prefixLength = raw.length - cleaned.length;
+                    const depth = Math.floor(prefixLength / 4);
+                    const isDir = cleaned.endsWith('/');
+                    const name = isDir ? cleaned.slice(0, -1) : cleaned;
+
+                    while (stack.length > 1 && stack[stack.length - 1].depth >= depth) {
+                        stack.pop();
+                    }
+                    const parentPath = stack[stack.length - 1].path;
+                    const fullPath = parentPath ? `${parentPath}/${name}` : name;
+
+                    entries.push({ path: fullPath, isDir });
+
+                    if (isDir) {
+                        stack.push({ depth, path: fullPath });
+                    }
+                }
+                return entries;
+            }
+
+            function buildZip(entries) {
+                const encoder = new TextEncoder();
+                const parts = [];
+                const centralDirParts = [];
+                let offset = 0;
+
+                for (const entry of entries) {
+                    const rawName = entry.path + (entry.isDir ? '/' : '');
+                    const nameBytes = encoder.encode(rawName);
+
+                    const localHeader = new Uint8Array(30 + nameBytes.length);
+                    const lh = new DataView(localHeader.buffer);
+                    lh.setUint32(0, 0x04034b50, true);
+                    lh.setUint16(4, 20, true);
+                    lh.setUint16(6, 0x0800, true);
+                    lh.setUint16(8, 0, true);
+                    lh.setUint16(10, 0, true);
+                    lh.setUint16(12, 0, true);
+                    lh.setUint32(14, 0, true);
+                    lh.setUint32(18, 0, true);
+                    lh.setUint32(22, 0, true);
+                    lh.setUint16(26, nameBytes.length, true);
+                    lh.setUint16(28, 0, true);
+                    localHeader.set(nameBytes, 30);
+                    parts.push(localHeader);
+                    offset += localHeader.length;
+
+                    const centralEntry = new Uint8Array(46 + nameBytes.length);
+                    const ce = new DataView(centralEntry.buffer);
+                    ce.setUint32(0, 0x02014b50, true);
+                    ce.setUint16(4, 20, true);
+                    ce.setUint16(6, 20, true);
+                    ce.setUint16(8, 0x0800, true);
+                    ce.setUint16(10, 0, true);
+                    ce.setUint16(12, 0, true);
+                    ce.setUint16(14, 0, true);
+                    ce.setUint32(16, 0, true);
+                    ce.setUint32(20, 0, true);
+                    ce.setUint32(24, 0, true);
+                    ce.setUint16(28, nameBytes.length, true);
+                    ce.setUint16(30, 0, true);
+                    ce.setUint16(32, 0, true);
+                    ce.setUint16(34, 0, true);
+                    ce.setUint16(36, 0, true);
+                    ce.setUint32(38, entry.isDir ? 0x10 : 0x20, true);
+                    ce.setUint32(42, offset - localHeader.length, true);
+                    centralEntry.set(nameBytes, 46);
+                    centralDirParts.push(centralEntry);
+                }
+
+                const centralDirOffset = offset;
+                const centralDirSize = centralDirParts.reduce((s, p) => s + p.length, 0);
+                parts.push(...centralDirParts);
+
+                const eocd = new Uint8Array(22);
+                const ev = new DataView(eocd.buffer);
+                ev.setUint32(0, 0x06054b50, true);
+                ev.setUint16(4, 0, true);
+                ev.setUint16(6, 0, true);
+                ev.setUint16(8, entries.length, true);
+                ev.setUint16(10, entries.length, true);
+                ev.setUint32(12, centralDirSize, true);
+                ev.setUint32(16, centralDirOffset, true);
+                ev.setUint16(20, 0, true);
+                parts.push(eocd);
+
+                let totalLen = parts.reduce((s, p) => s + p.length, 0);
+                const result = new Uint8Array(totalLen);
+                let pos = 0;
+                for (const p of parts) {
+                    result.set(p, pos);
+                    pos += p.length;
+                }
+                return result.buffer;
+            }
+
+            function downloadZip() {
+                statusEl.textContent = '';
+                const text = textarea.value.trim();
+                if (!text) {
+                    statusEl.textContent = '⚠️ Please enter a tree.';
+                    statusEl.className = 'status error';
+                    return;
+                }
+
+                let entries;
+                try {
+                    entries = parseTree(text);
+                } catch (err) {
+                    statusEl.textContent = '❌ Error parsing tree.';
+                    statusEl.className = 'status error';
+                    return;
+                }
+
+                if (entries.length === 0) {
+                    statusEl.textContent = '⚠️ No valid entries. Check indentation.';
+                    statusEl.className = 'status error';
+                    return;
+                }
+
+                const buffer = buildZip(entries);
+                const blob = new Blob([buffer], { type: 'application/zip' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = (zipNameInput.value.trim() || 'archive') + '.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 150);
+
+                statusEl.textContent = `✅ Downloaded ${a.download} (${entries.length} entries)`;
+                statusEl.className = 'status';
+            }
+
+            downloadBtn.addEventListener('click', downloadZip);
+
+            clearBtn.addEventListener('click', () => {
+                textarea.value = '';
+                zipNameInput.value = 'TMDCLauncher';
+                statusEl.textContent = '';
+            });
+
+            textarea.addEventListener('dragover', e => {
+                e.preventDefault();
+                textarea.style.borderColor = 'var(--accent)';
+            });
+            textarea.addEventListener('dragleave', () => {
+                textarea.style.borderColor = 'var(--border)';
+            });
+            textarea.addEventListener('drop', e => {
+                e.preventDefault();
+                textarea.style.borderColor = 'var(--border)';
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.match(/text.*/)) {
+                    const reader = new FileReader();
+                    reader.onload = ev => { textarea.value = ev.target.result; };
+                    reader.readAsText(file);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
