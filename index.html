@@ -3,142 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tree → ZIP Download</title>
+    <title>Tree → ZIP</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root {
-            --bg: #1e1e1e;
-            --surface: #2a2a2a;
-            --text: #f0f0f0;
-            --accent: #f5b800;
-            --accent-hover: #e5a800;
-            --border: #4a4a4a;
-            --input-bg: #141414;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background: var(--bg);
-            color: var(--text);
+            background: #1e1e1e;
+            color: #f0f0f0;
             font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 2rem 1rem;
+            padding: 20px;
         }
         .container {
-            background: var(--surface);
+            background: #2a2a2a;
             border-radius: 16px;
-            padding: 2rem;
+            padding: 25px;
             width: 100%;
-            max-width: 950px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            max-width: 900px;
         }
-        h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #ffd54f, #ffb300);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.25rem;
-        }
-        .subtitle { color: #bbb; margin-bottom: 1.5rem; font-size: 0.95rem; }
-        label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #ccc; }
+        h1 { color: #f5b800; margin-bottom: 5px; }
+        .subtitle { color: #bbb; margin-bottom: 20px; }
         textarea {
             width: 100%;
-            height: 400px;
-            background: var(--input-bg);
+            height: 350px;
+            background: #141414;
             color: #ffe0b0;
-            border: 1px solid var(--border);
+            border: 1px solid #4a4a4a;
             border-radius: 10px;
-            padding: 1rem;
-            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-            font-size: 0.9rem;
-            line-height: 1.5;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
             resize: vertical;
             outline: none;
-            transition: border-color 0.2s;
         }
-        textarea:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(245,184,0,0.25);
-        }
+        textarea:focus { border-color: #f5b800; }
         .controls {
             display: flex;
-            gap: 1rem;
+            gap: 10px;
             align-items: center;
+            margin-top: 15px;
             flex-wrap: wrap;
-            margin-top: 1rem;
         }
-        .filename-box {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
-        }
-        .filename-box span { color: #bbb; }
-        .filename-box input {
-            background: transparent;
-            border: none;
+        input[type="text"] {
+            background: #141414;
+            border: 1px solid #4a4a4a;
             color: #f0f0f0;
-            font-size: 0.9rem;
-            width: 120px;
-            outline: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            width: 130px;
         }
-        .btn {
-            background: var(--accent);
+        button {
+            background: #f5b800;
             color: #1e1e1e;
             border: none;
+            padding: 10px 20px;
             border-radius: 8px;
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 700;
+            font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
+            font-size: 14px;
         }
-        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-        .btn-secondary {
-            background: #444;
-            color: #ddd;
-        }
-        .btn-secondary:hover { background: #555; }
-        .status {
-            margin-left: 0.5rem;
-            font-size: 0.9rem;
-            color: #ffd54f;
-            min-height: 1.2em;
-        }
+        button:hover { background: #e5a800; }
+        .btn-clear { background: #444; color: #ddd; }
+        .btn-clear:hover { background: #555; }
+        .status { color: #ffd54f; font-size: 14px; margin-left: 10px; }
         .status.error { color: #ff6b6b; }
-        .tips {
-            background: #232323;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-            font-size: 0.85rem;
-            color: #bbb;
-        }
-        .tips code {
-            background: #363636;
-            padding: 0.2em 0.4em;
-            border-radius: 4px;
-            color: #ffb300;
-        }
+        .tips { background: #232323; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 13px; color: #bbb; }
+        .tips code { background: #363636; padding: 2px 6px; border-radius: 4px; color: #ffb300; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📦 Tree → ZIP</h1>
-        <p class="subtitle">Paste a directory tree – press <strong>Download ZIP</strong> to get the exact folder structure.</p>
-
-        <label for="treeInput">Directory Tree:</label>
-        <textarea id="treeInput" spellcheck="false">TMDCLauncher/
-├── build.gradle.kts (project-level)
+        <p class="subtitle">Paste tree → Download ZIP. Aman, ringan, no bug.</p>
+        <textarea id="treeInput">TMDCLauncher/
+├── build.gradle.kts
 ├── settings.gradle.kts
 ├── gradle.properties
 ├── gradle/
@@ -162,216 +102,129 @@
                 │   └── themes.xml
                 ├── xml/
                 │   └── settings_preferences.xml
-                └── drawable/ (icons, etc.)</textarea>
-
+                └── drawable/</textarea>
         <div class="controls">
-            <div class="filename-box">
-                <span>📄</span>
-                <input type="text" id="zipNameInput" value="TMDCLauncher" placeholder="archive-name">
-                <span>.zip</span>
-            </div>
-            <button class="btn" id="downloadBtn">
-                <span>⬇️</span> Download ZIP
-            </button>
-            <button class="btn btn-secondary" id="clearBtn">
-                <span>🗑️</span> Clear
-            </button>
+            <input type="text" id="zipName" value="TMDCLauncher" placeholder="nama-file">
+            <span style="color:#bbb">.zip</span>
+            <button id="downloadBtn">⬇️ Download ZIP</button>
+            <button class="btn-clear" id="clearBtn">🗑️ Clear</button>
             <span class="status" id="statusMsg"></span>
         </div>
-
         <div class="tips">
-            <strong>💡 How it works:</strong>
-            <ul style="margin-top: 0.4rem; padding-left: 1.2rem;">
-                <li>Lines ending with <code>/</code> become <strong>folders</strong>.</li>
-                <li>Other lines become <strong>empty files</strong> (you add content later).</li>
-                <li>Indentation is read from the visual position – tree characters (<code>├──</code>, <code>│</code>) are handled automatically.</li>
-                <li>Comments like <code>(project-level)</code> are removed.</li>
-            </ul>
+            <strong>💡 Cara pakai:</strong><br>
+            • Baris dengan <code>/</code> = folder<br>
+            • Baris lain = file kosong<br>
+            • Indentasi = level folder<br>
+            • Teks <code>(dalam kurung)</code> diabaikan
         </div>
     </div>
 
     <script>
-        (() => {
-            const textarea = document.getElementById('treeInput');
-            const downloadBtn = document.getElementById('downloadBtn');
-            const clearBtn = document.getElementById('clearBtn');
-            const zipNameInput = document.getElementById('zipNameInput');
-            const statusEl = document.getElementById('statusMsg');
-
-            function cleanLine(line) {
-                let cleaned = line.replace(/^[│├└─\s]+/, '');
-                cleaned = cleaned.replace(/\s*\(.*?\)\s*$/, '');
-                return cleaned.trimEnd();
-            }
+        (function() {
+            var ta = document.getElementById('treeInput');
+            var btn = document.getElementById('downloadBtn');
+            var clear = document.getElementById('clearBtn');
+            var nameInput = document.getElementById('zipName');
+            var status = document.getElementById('statusMsg');
 
             function parseTree(text) {
-                const lines = text.split('\n');
-                const entries = [];
-                const stack = [{ depth: -1, path: '' }];
+                var lines = text.split('\n');
+                var entries = [];
+                var stack = [{ depth: -1, path: '' }];
 
-                for (const raw of lines) {
+                for (var i = 0; i < lines.length; i++) {
+                    var raw = lines[i];
                     if (raw.trim() === '') continue;
-                    const cleaned = cleanLine(raw);
-                    if (!cleaned) continue;
-                    const prefixLength = raw.length - cleaned.length;
-                    const depth = Math.floor(prefixLength / 4);
-                    const isDir = cleaned.endsWith('/');
-                    const name = isDir ? cleaned.slice(0, -1) : cleaned;
 
-                    while (stack.length > 1 && stack[stack.length - 1].depth >= depth) {
+                    var cleaned = raw.replace(/^[│├└─\s]+/, '');
+                    cleaned = cleaned.replace(/\s*\(.*?\)\s*$/, '');
+                    cleaned = cleaned.trimEnd();
+                    if (!cleaned) continue;
+
+                    var prefixLen = raw.length - cleaned.length;
+                    var depth = Math.floor(prefixLen / 4);
+                    var isDir = cleaned.endsWith('/');
+                    var name = isDir ? cleaned.slice(0, -1) : cleaned;
+
+                    while (stack.length > 0 && stack[stack.length - 1].depth >= depth) {
                         stack.pop();
                     }
-                    const parentPath = stack[stack.length - 1].path;
-                    const fullPath = parentPath ? `${parentPath}/${name}` : name;
+                    if (stack.length === 0) {
+                        stack.push({ depth: -1, path: '' });
+                    }
 
-                    entries.push({ path: fullPath, isDir });
+                    var parentPath = stack[stack.length - 1].path;
+                    var fullPath = parentPath ? parentPath + '/' + name : name;
+
+                    entries.push({ path: fullPath, isDir: isDir });
 
                     if (isDir) {
-                        stack.push({ depth, path: fullPath });
+                        stack.push({ depth: depth, path: fullPath });
                     }
                 }
                 return entries;
             }
 
-            function buildZip(entries) {
-                const encoder = new TextEncoder();
-                const parts = [];
-                const centralDirParts = [];
-                let offset = 0;
+            btn.addEventListener('click', function() {
+                status.textContent = '';
+                var text = ta.value.trim();
 
-                for (const entry of entries) {
-                    const rawName = entry.path + (entry.isDir ? '/' : '');
-                    const nameBytes = encoder.encode(rawName);
-
-                    const localHeader = new Uint8Array(30 + nameBytes.length);
-                    const lh = new DataView(localHeader.buffer);
-                    lh.setUint32(0, 0x04034b50, true);
-                    lh.setUint16(4, 20, true);
-                    lh.setUint16(6, 0x0800, true);
-                    lh.setUint16(8, 0, true);
-                    lh.setUint16(10, 0, true);
-                    lh.setUint16(12, 0, true);
-                    lh.setUint32(14, 0, true);
-                    lh.setUint32(18, 0, true);
-                    lh.setUint32(22, 0, true);
-                    lh.setUint16(26, nameBytes.length, true);
-                    lh.setUint16(28, 0, true);
-                    localHeader.set(nameBytes, 30);
-                    parts.push(localHeader);
-                    offset += localHeader.length;
-
-                    const centralEntry = new Uint8Array(46 + nameBytes.length);
-                    const ce = new DataView(centralEntry.buffer);
-                    ce.setUint32(0, 0x02014b50, true);
-                    ce.setUint16(4, 20, true);
-                    ce.setUint16(6, 20, true);
-                    ce.setUint16(8, 0x0800, true);
-                    ce.setUint16(10, 0, true);
-                    ce.setUint16(12, 0, true);
-                    ce.setUint16(14, 0, true);
-                    ce.setUint32(16, 0, true);
-                    ce.setUint32(20, 0, true);
-                    ce.setUint32(24, 0, true);
-                    ce.setUint16(28, nameBytes.length, true);
-                    ce.setUint16(30, 0, true);
-                    ce.setUint16(32, 0, true);
-                    ce.setUint16(34, 0, true);
-                    ce.setUint16(36, 0, true);
-                    ce.setUint32(38, entry.isDir ? 0x10 : 0x20, true);
-                    ce.setUint32(42, offset - localHeader.length, true);
-                    centralEntry.set(nameBytes, 46);
-                    centralDirParts.push(centralEntry);
-                }
-
-                const centralDirOffset = offset;
-                const centralDirSize = centralDirParts.reduce((s, p) => s + p.length, 0);
-                parts.push(...centralDirParts);
-
-                const eocd = new Uint8Array(22);
-                const ev = new DataView(eocd.buffer);
-                ev.setUint32(0, 0x06054b50, true);
-                ev.setUint16(4, 0, true);
-                ev.setUint16(6, 0, true);
-                ev.setUint16(8, entries.length, true);
-                ev.setUint16(10, entries.length, true);
-                ev.setUint32(12, centralDirSize, true);
-                ev.setUint32(16, centralDirOffset, true);
-                ev.setUint16(20, 0, true);
-                parts.push(eocd);
-
-                let totalLen = parts.reduce((s, p) => s + p.length, 0);
-                const result = new Uint8Array(totalLen);
-                let pos = 0;
-                for (const p of parts) {
-                    result.set(p, pos);
-                    pos += p.length;
-                }
-                return result.buffer;
-            }
-
-            function downloadZip() {
-                statusEl.textContent = '';
-                const text = textarea.value.trim();
                 if (!text) {
-                    statusEl.textContent = '⚠️ Please enter a tree.';
-                    statusEl.className = 'status error';
+                    status.textContent = '⚠️ Masukkan tree dulu.';
+                    status.className = 'status error';
                     return;
                 }
 
-                let entries;
+                var entries;
                 try {
                     entries = parseTree(text);
-                } catch (err) {
-                    statusEl.textContent = '❌ Error parsing tree.';
-                    statusEl.className = 'status error';
+                } catch (e) {
+                    status.textContent = '❌ Error parsing.';
+                    status.className = 'status error';
                     return;
                 }
 
                 if (entries.length === 0) {
-                    statusEl.textContent = '⚠️ No valid entries. Check indentation.';
-                    statusEl.className = 'status error';
+                    status.textContent = '⚠️ Tidak ada entri valid.';
+                    status.className = 'status error';
                     return;
                 }
 
-                const buffer = buildZip(entries);
-                const blob = new Blob([buffer], { type: 'application/zip' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = (zipNameInput.value.trim() || 'archive') + '.zip';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 150);
+                var zip = new JSZip();
 
-                statusEl.textContent = `✅ Downloaded ${a.download} (${entries.length} entries)`;
-                statusEl.className = 'status';
-            }
-
-            downloadBtn.addEventListener('click', downloadZip);
-
-            clearBtn.addEventListener('click', () => {
-                textarea.value = '';
-                zipNameInput.value = 'TMDCLauncher';
-                statusEl.textContent = '';
-            });
-
-            textarea.addEventListener('dragover', e => {
-                e.preventDefault();
-                textarea.style.borderColor = 'var(--accent)';
-            });
-            textarea.addEventListener('dragleave', () => {
-                textarea.style.borderColor = 'var(--border)';
-            });
-            textarea.addEventListener('drop', e => {
-                e.preventDefault();
-                textarea.style.borderColor = 'var(--border)';
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.match(/text.*/)) {
-                    const reader = new FileReader();
-                    reader.onload = ev => { textarea.value = ev.target.result; };
-                    reader.readAsText(file);
+                for (var i = 0; i < entries.length; i++) {
+                    var e = entries[i];
+                    if (e.isDir) {
+                        zip.folder(e.path);
+                    } else {
+                        zip.file(e.path, '');
+                    }
                 }
+
+                zip.generateAsync({ type: 'blob' }).then(function(blob) {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = (nameInput.value.trim() || 'archive') + '.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function() {
+                        URL.revokeObjectURL(url);
+                    }, 200);
+
+                    status.textContent = '✅ Berhasil: ' + a.download + ' (' + entries.length + ' entri)';
+                    status.className = 'status';
+                }).catch(function(err) {
+                    status.textContent = '❌ Gagal bikin ZIP.';
+                    status.className = 'status error';
+                });
+            });
+
+            clear.addEventListener('click', function() {
+                ta.value = '';
+                nameInput.value = 'TMDCLauncher';
+                status.textContent = '';
             });
         })();
     </script>
